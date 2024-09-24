@@ -1,0 +1,97 @@
+---
+title: "stat443 assignment1"
+author: "Yiming Shen 20891774"
+date: "30/01/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### stat443 assignment1 problem 4
+
+## (a)
+```{R}
+oz <- read.csv("MonthlyOzoneLA.csv", header = FALSE)
+oz.ts <- ts(oz, start = c(1955,1), end = c(1972,12), frequency = 12)
+
+# exploratory commands
+# class
+class(oz.ts)
+
+# starting date
+start(oz.ts)
+
+# ending date
+end(oz.ts)
+
+# frequency
+frequency(oz.ts)
+```
+
+\newpage
+## (b)
+```{R}
+# print
+print(oz.ts)
+
+# comment on structure
+# The structure is a 18 x 12 matrix, with 18 rows as years and 12 columns as months.
+```
+
+\newpage
+## (c)
+```{R}
+plot(oz.ts, ylab="Readings of Ozone (pphm)", xaxt="n",
+     main = "Averages of hourly readings of Ozone in LA downtown")
+axis(1, at = start(time(oz.ts))[1]:end(time(oz.ts))[1], labels = TRUE, las=2)
+
+# period
+# The period of the time series is 12.
+```
+
+\newpage
+## (d)
+## Based on visualied time series, it is non-stationary. Because the time
+## series has a decreasing trend and seasonal cycle.
+
+\newpage
+## (e)
+```{R}
+agg_oz.ts <- aggregate(oz.ts)
+plot(agg_oz.ts, ylab = "Readings of Ozone (pphm)", xaxt="n",
+     main="Yearly summary of averages of hourly readings 
+     of Ozone in LA downtown")
+axis(1, at = start(time(agg_oz.ts))[1]:end(time(agg_oz.ts))[1], 
+     labels = TRUE, las=2)
+
+# comment on observation
+# I observed that the time series reached its peak in 1956 and reached its bottom in 1971.
+# And overall, there is a decreasing trend.
+```
+
+\newpage
+## (f)
+```{R}
+boxplot(oz.ts~cycle(oz.ts), xlab="Months", ylab="Readings of Ozone (pphm)",
+        main="Monthly summary of averages of hourly readings 
+        of Ozone in LA downtown")
+
+# comment on observation
+# I observed that there is seasonal effect, the values of readings are relative
+# high for 6-10 (summer) while the values are relative low for 1-3,12 (winter).
+```
+
+\newpage
+## (g)
+```{R}
+plot(decompose(oz.ts))
+
+# comment on observation
+# Based on 'trend' part, I found that there is a decreasing trend.
+# Based on 'seasonal' part, I found that there is a seasonal cycle.
+# Based on 'random' part, I found that the variation between 1955 and 1960
+# are relative large, while the variation between 1960 and 1972 are small.
+```
