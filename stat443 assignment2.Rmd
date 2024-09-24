@@ -1,0 +1,241 @@
+---
+title: "stat443 assignment2"
+author: "Yiming Shen 20891774"
+date: "13/02/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 1
+```{R}
+library(TSA)
+data("hours")
+```
+
+### (a)
+```{R}
+har. <- harmonic(hours)
+hours.lm1 <- lm(hours ~ har.)
+summary(hours.lm1)
+
+```
+\newpage
+### (b)
+```{R}
+# residual vs. time
+plot(y=rstudent(hours.lm1), x=as.vector(time(hours)), type='l',
+     xlab='time', ylab='standardized residuals')
+points(y=rstudent(hours.lm1), x=as.vector(time(hours)),
+       pch=as.vector(season(hours)))
+# comments: I observed that there is a quadratic pattern in the residual time
+# series but there is no obvious seasonal pattern.
+
+# residual vs. estimated fit
+plot(y=rstudent(hours.lm1), x=as.vector(fitted(hours.lm1)), 
+     xlab='fitted trend value', ylab='standardized residuals', type='n')
+points(y=rstudent(hours.lm1), x=as.vector(fitted(hours.lm1)),
+       pch=as.vector(season(hours)))
+# comments: It seems to be a stable constant in the variability at different
+# estimated levels.
+
+# normality of residuals
+par(mfrow=c(1,2))
+qqnorm(rstudent(hours.lm1))
+qqline(rstudent(hours.lm1))
+hist(rstudent(hours.lm1), xlab='standardized residuals',
+     main='Histogram for Residuals')
+# comments: There are deviations on lower end of QQ-plot and the residuals are
+# not normally distributed. 
+# The histogram also indicates a left-skewed distribution, which means that 
+# there is a heavy left tail.
+
+# ACF plot
+acf(rstudent(hours.lm1))
+# comments: from the ACF plot, since many spikes go beyond the confidence 
+# band, so a strong correlation among residual values can be observed.
+```
+```{R}
+# test for normality
+shapiro.test(rstudent(hours.lm1))
+# comments: since p-value = 4.259e-05 < 0.05,
+# so we have strong evidence against our null hypothesis: data come from a 
+# normal distribution.
+
+
+# test for constant variance
+seg <- as.vector(season(hours))
+fligner.test(rstudent(hours.lm1), seg)
+# comments: since p-value = 0.9939 > 0.05,
+# so we have no evidence against our null hypothesis: data have 
+# constant variance.
+
+# test for randomness
+library("randtests")
+library("lawstat")
+difference.sign.test(rstudent(hours.lm1))
+# comments: since p-value = 0.0001632 < 0.05,
+# so we have strong evidence against our null hypothesis: the data is random.
+runs.test(rstudent(hours.lm1))
+# comments: same as difference sign test, since p-value = 0.004176,
+# so we have strong evidence against our null hypothesis: the data is random.
+```
+\newpage
+### (c)
+The cosine trend model is not appropriate for the trend estimation.
+Because from residual vs. time, we observed a quadratic trend.
+From QQ-plot and histogram, we found that the residuals are not normally
+distributed, which violated the normality assumption.
+From ACF plot, a strong correlation among residual values can be observed,
+which violated the uncorrelation assumption.
+\newpage
+### (d)
+```{R}
+# fit a combination of cosine trend model and quadratic model
+hours.lm2 <- lm(hours~har.+time(hours)+I(time(hours)^2))
+summary(hours.lm2)
+
+```
+\newpage
+### (e)
+```{R}
+# residual vs. time
+plot(y=rstudent(hours.lm2), x=as.vector(time(hours)),
+     type='l', xlab='time', ylab='standardized residuals')
+points(y=rstudent(hours.lm2), x=as.vector(time(hours)),
+       pch=as.vector(season(hours)))
+# comments: there is no obvious pattern observed in the residual time series
+# It seems that the combined fit significantly improved the quality of fit.
+
+
+# residuals vs. estimated fit
+plot(y=rstudent(hours.lm2),x=as.vector(fitted(hours.lm2)),
+                xlab='fitted trend values',
+                ylab='standardized residuals',
+                type='n')
+points(y=rstudent(hours.lm2),
+                  x=as.vector(fitted(hours.lm2)),
+                  pch=as.vector(season(hours)))
+# comments: It seems that there still exists pattern, since the residual decreases 
+# as the value of estimated fit increases.
+
+# normality of residuals
+par(mfrow=c(1,2))
+qqnorm(rstudent(hours.lm2))
+qqline(rstudent(hours.lm2))
+hist(rstudent(hours.lm2), xlab='standardized residuals',
+     main='Histogram for Residuals (Quadratic Model)')
+# comments: The residuals follow normal distribution strictly.
+
+# ACF plot
+acf(rstudent(hours.lm2))
+# comments: from the ACF plot, since many spikes go beyond the confidence 
+# band, so a strong correlation among residual values can be observed.
+
+```
+
+```{R}
+# test for normality
+shapiro.test(rstudent(hours.lm2))
+# comments: since p-value = 0.7581 > 0.05,
+# so we have no evidence against our null hypothesis: data come from a 
+# normal distribution.
+
+
+# test for constant variance
+seg <- as.vector(season(hours))
+fligner.test(rstudent(hours.lm2), seg)
+# comments: since p-value = 0.8256 > 0.05,
+# so we have no evidence against our null hypothesis: data have 
+# constant variance.
+
+# test for randomness
+library("randtests")
+library("lawstat")
+difference.sign.test(rstudent(hours.lm2))
+# comments: since p-value = 0.01471 < 0.05,
+# so we have evidence against our null hypothesis: the data is random.
+runs.test(rstudent(hours.lm2))
+# comments: same as difference sign test, since p-value = 0.004176 < 0.05
+# so we have strong evidence against our null hypothesis: the data is random.
+
+```
+\newpage
+### (f)
+The combined model is relative appropriate for the trend estimation.
+Because from residual vs. time, we observed no obvious pattern anymore.
+From QQ-plot and histogram, we found that the residuals are normally
+distributed.
+From residual vs. estimated value, there is no obvious change in the 
+variability at different estimated levels.
+But for ACF plot, a correlation still exists among residual values.
+I think that the combined model significantly improved the quality of fit.
+
+
+\newpage
+## Problem 2
+```{R}
+### (a)
+phi <- 0.5
+# we know ACF of AR(1) is phi^k with k = 0,1,2,3...
+k <- 1:30
+ACF_AR1 <- phi^k
+plot(ACF_AR1, xlab="time lag k", ylab=expression(AR(1)),
+     main="ACF of AR(1) Process with phi=0.5")
+```
+\newpage
+```{R}
+### (b)
+phi <- 0.7
+theta <- 0.5
+# we know ACF of ARMA(1,1) is when k>= 1:
+# (phi-theta)*(1-theta*phi)/(1-2*theta*phi+theta^2)*phi^(k-1)
+k <- 1:30
+ACF_ARMA11 <- (phi-theta)*(1-theta*phi)/(1-2*theta*phi+theta^2)*phi^(k-1)
+plot(c(1,ACF_ARMA11), xlab = "time lag k", ylab=expression(ARMA(1,1)),
+     main="ACF of ARMA(1,1) Process with phi=0.7 theta=0.5")
+```
+\newpage
+```{R}
+### (c)
+phi <- 0.7
+theta <- -0.5
+# we know ACF of ARMA(1,1) is when k>= 1:
+# (phi-theta)*(1-theta*phi)/(1-2*theta*phi+theta^2)*phi^(k-1)
+k <- 1:30
+ACF_ARMA11 <- (phi-theta)*(1-theta*phi)/(1-2*theta*phi+theta^2)*phi^(k-1)
+plot(c(1,ACF_ARMA11), xlab = "time lag k", ylab=expression(ARMA(1,1)),
+     main="ACF of ARMA(1,1) Process with phi=0.7 theta=-0.5")
+```
+\newpage
+## Problem 4
+```{R}
+## (c)
+Y = c(18.25, 16.06, 7.81, 15.26, 16.61, 20.21, 22.03, 9.81, 12.58, 15.54, 
+      16.63, 21.20, 14.43, 17.71)
+
+# plot correlogram in R
+acf(Y, xlab='time lag k', main='Correlogram for time series Y')
+# comments: from the ACF, we observed that there is no spike go beyond
+# confidence band, so no strong correlation is observed.
+
+```
+\newpage
+### Problem 5
+```{R}
+## (c)
+par(mfrow=c(1,2))
+AR1 <- arima.sim(model = list(ar=0.4), n=100)
+plot(AR1, type='o', ylab=expression(AR(1)),
+     main = expression(paste("Generating from Y"[t], "=0.4 Y"[t-1], "+ Z"[t], 
+                             " process")))
+acf(AR1, xlab = "time lag k",
+    main=expression(paste("ACF of Y"[t], "=0.4 Y"[t-1], "+ Z"[t], 
+                               " process")))
+
+# comments on ACF: from the ACF, we observe that the magnitude of the ACF
+# decays exponentially as the time lag k increases.
+```
+

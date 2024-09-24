@@ -1,0 +1,295 @@
+---
+title: "stat443 assignment3"
+author: "Yiming Shen 20891774"
+date: "14/03/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 3
+```{R}
+ARMA11 <- arima.sim(model = list(ar=0.4, ma=-0.6), n=60)
+```
+
+### (a)
+```{R}
+library(simts)
+plot(theo_acf(ar = 0.4, ma = -0.6), 
+              main="Theoreticl ACF of ARMA(1,1) with phi=0.4, theta=0.6, n=60")
+```
+
+### (b)
+```{R}
+acf(ARMA11, xaxp=c(0, 30, 10), ylab="ACF",
+    main="Sample ACF of ARMA(1,1) with phi=0.4, theta=0.6, n=60",
+    type="correlation")
+
+# comments:
+# The sample ACF plot has all non-significant lags except lag0, which means that 
+# no spike lies outside bounds.
+# while the plot of theoreticl ACF has an exponential decay.
+# So sample ACF does not mimic the true ACF in great details.
+```
+
+### (c)
+```{R}
+par(mfrow=c(1,2))
+# ACF
+acf(ARMA11,xaxp=c(0,30,10),ylab="ACF",type="correlation",
+    main="Sample ACF of ARMA(1,1) with phi=0.4, theta=0.6, n=60")
+# PACF
+acf(ARMA11,xaxp=c(0,30,10),ylab="PACF",type="partial",
+    main="Sample PACF of ARMA(1,1) with phi=0.4, theta=0.6, n=60")
+
+# comments:
+# No, the patterns of sample ACF and PACF cannot help me specify the order.
+# Since in both ACF and PACF, almost all lags except lag0 lie within bounds.
+```
+
+### (d)
+```{R}
+ARMA11_d <- arima.sim(model=list(ar=0.4,ma=-0.6),n=36)
+par(mfrow=c(1,2))
+# ACF
+acf(ARMA11_d,xaxp=c(0,30,10),ylab="ACF",type="correlation",
+    main="Sample ACF of ARMA(1,1) with phi=0.4, theta=0.6, n=36")
+# PACF
+acf(ARMA11_d,xaxp=c(0,30,10),ylab="PACF",type="partial",
+    main="Sample PACF of ARMA(1,1) with phi=0.4, theta=0.6, n=36")
+
+# comments:
+# Compared with theoretical ACF plot, the sample ACF plot has almost all
+# non-significant lags except lag0, which means that most spike lies within
+# bounds.
+
+# No, the patterns of sample ACF and PACF cannot help me specify the order.
+# Since in both ACF and PACF, almost all lags except lag0 lie within bounds.
+```
+
+
+### (e)
+```{R}
+ARMA11_e <- arima.sim(model=list(ar=0.4,ma=-0.6),n=120)
+par(mfrow=c(1,2))
+# ACF
+acf(ARMA11_e,xaxp=c(0,30,10),ylab="ACF",type="correlation",
+    main="Sample ACF of ARMA(1,1) with phi=0.4, theta=0.6, n=120")
+# PACF
+acf(ARMA11_e,xaxp=c(0,30,10),ylab="PACF",type="partial",
+    main="Sample PACF of ARMA(1,1) with phi=0.4, theta=0.6, n=120")
+
+# comments:
+# Compared with theoretical ACF plot, the sample ACF plot also has a 
+# significant spike around lag1. It shows that the correlation around lag1 is 
+# relative obvious, which is similar to the theoretical plot. While almost all 
+# other lags except lag0, lag1 are non-significant.
+
+# No, the patterns of sample ACF and PACF cannot help me specify the order.
+# Since in both ACF and PACF, almost all lags except lag0 lie within bounds.
+```
+
+\newpage
+## Question 4
+```{R}
+library(TSA)
+data(robot)
+```
+
+### (a)
+```{R}
+ts.robot <- ts(robot)
+plot(ts.robot, ylab="robot",
+     xlab="time",main="Time Series Plot for robot")
+
+# comments:
+# These data appear to come from a non-stationary process.
+# Because it seems that the mean and variance of the process are not constant
+# over time. Besides, there seems to be a drop around 200 and 300, which
+# can be considered as a sudden change in pattern.
+```
+
+
+### (b)
+```{R}
+par(mfrow=c(1,2))
+# ACF
+acf(ts.robot, ylab="ACF", main="Sample ACF Plot for Robot Time Series")
+# PACF
+acf(ts.robot, ylab="PACF", type = "partial",
+    main="Sample PACF Plot for Robot Time Series")
+
+# comments:
+# Based on the sample ACF plot:
+# These data appear to come from a non-stationary process since
+# the sample ACF fails to die out rapidly as the lags increase
+# Based on the sample PACF plot:
+# The sample PACF dies out after lag6 roughly, 
+# so I propose a AR(6) model.
+```
+
+
+### (c)
+```{R}
+# Try some different ARIMA models, based on (a)-(b): we consider AR,MA & ARMA.
+ARIMA_col1 <- c("ARIMA(6,0,0)","ARIMA(5,0,0)","ARIMA(4,0,0)","ARIMA(3,0,0)",
+                "ARIMA(2,0,0)","ARIMA(1,0,0)")
+ARIMA_col2 <- c("ARIMA(0,0,6)","ARIMA(0,0,5)","ARIMA(0,0,4)","ARIMA(0,0,3)",
+                "ARIMA(0,0,2)","ARIMA(0,0,1)")
+ARIMA_col3 <- c("ARIMA(6,0,6)","ARIMA(5,0,5)","ARIMA(4,0,4)","ARIMA(3,0,3)",
+                "ARIMA(2,0,2)","ARIMA(1,0,1)")
+               
+AIC_col1 <- c(arima(ts.robot,order = c(6,0,0))$aic,
+              arima(ts.robot,order = c(5,0,0))$aic,
+              arima(ts.robot,order = c(4,0,0))$aic,
+              arima(ts.robot,order = c(3,0,0))$aic,
+              arima(ts.robot,order = c(2,0,0))$aic,
+              arima(ts.robot,order = c(1,0,0))$aic)
+            
+AIC_col2 <- c(arima(ts.robot,order = c(0,0,6))$aic,
+              arima(ts.robot,order = c(0,0,5))$aic,
+              arima(ts.robot,order = c(0,0,4))$aic,
+              arima(ts.robot,order = c(0,0,3))$aic,
+              arima(ts.robot,order = c(0,0,2))$aic,
+              arima(ts.robot,order = c(0,0,1))$aic)
+  
+AIC_col3 <- c(arima(ts.robot,order = c(6,0,6))$aic,
+              arima(ts.robot,order = c(5,0,5))$aic,
+              arima(ts.robot,order = c(4,0,4))$aic,
+              arima(ts.robot,order = c(3,0,3))$aic,
+              arima(ts.robot,order = c(2,0,2))$aic,
+              arima(ts.robot,order = c(1,0,1))$aic)
+
+df <- data.frame(ARIMA_col1,AIC_col1,ARIMA_col2,AIC_col2,ARIMA_col3,AIC_col3)
+df
+
+# comments:
+# After trying different ARIMA models (actually more than I listed above),
+# by comparing their AIC, I specify the model ARIMA(1,0,1), which has the 
+# smallest AIC.
+```
+
+
+### (d)
+```{R}
+AR_fit <- arima(ts.robot,order=c(1,0,0))
+AR_fit
+```
+
+The estimated model would be written as following and also the estimated noise
+variance is 6.482e-06.
+$$
+(Y_t - 0.0015) = 0.3074(Y_{t-1} - 0.0015) + Z_t
+$$
+
+### (e)
+```{R}
+IMA_fit <-arima(ts.robot,order=c(0,1,1))
+IMA_fit
+```
+
+The estimated model would be written as following and also the estimated noise
+variance is 6.069e-06.
+$$
+Y_t - Y_{t-1} = Z_t - 0.8713 Z_{t-1}
+$$
+
+
+### (f)
+AIC:
+Since the AIC of the IMA(1,1) is smaller than the AIC of AR(1), so IMA(1,1) fits
+the data better.
+
+other diagnostic methods:
+```{R}
+# Residual VS. Time
+plot(residuals(AR_fit),ylab="Residuals",
+     main="Residuals VS. Time for AR(1)",
+     type='o')
+abline(h=0)
+plot(residuals(IMA_fit),ylab="Residuals",
+     main="Residuals VS. Time for IMA(1,1)",
+     type='o')
+abline(h=0)
+
+# Comments:
+# Both residual plots support the model, as no obvious trends are present.
+```
+
+```{R}
+# QQ plot
+qqnorm(residuals(AR_fit))
+qqline(residuals(AR_fit))
+shapiro.test(residuals(AR_fit))
+qqnorm(residuals(IMA_fit))
+qqline(residuals(IMA_fit))
+shapiro.test(residuals(IMA_fit))
+
+# comments:
+# In both qq-plots of AR(1) and IMA(1,1), points are lying roughly along the 
+# qq-line. And both of their p-values in Shapior test are big, which cannot
+# reject the normality hypothesis.
+```
+
+```{R}
+# ACF of Residuals
+acf(residuals(AR_fit), main="ACF of Residuals for AR(1)")
+Box.test(residuals(AR_fit),type="Ljung-Box")
+acf(residuals(IMA_fit), main="ACF of Residuals for IMA(1,1)")
+Box.test(residuals(IMA_fit),type="Ljung-Box")
+
+# comments:
+# Both of their p-values in Ljung-Box test are big, which cannot reject the
+# independence hypothesis.
+# While based on their ACF plots, there are more spikes in AR(1) plot go beyond
+# the bounds and most spikes in IMA(1,1) plot except lag10, all stay within
+# the bounds.
+
+
+# Final conclusion:
+# Based on AIC and ACF of Residuals, I think that model IMA(1,1) fits data 
+# better.
+```
+
+### (g)
+```{R}
+# Try some different ARIMA models, based on (b)-(f): we consider models with
+# one differencing this time.
+ARIMA_colA <- c("ARIMA(6,1,0)","ARIMA(5,1,0)","ARIMA(4,1,0)","ARIMA(3,1,0)",
+                "ARIMA(2,1,0)","ARIMA(1,1,0)")
+ARIMA_colB <- c("ARIMA(0,1,6)","ARIMA(0,1,5)","ARIMA(0,1,4)","ARIMA(0,1,3)",
+                "ARIMA(0,1,2)","ARIMA(0,1,1)")
+ARIMA_colC <- c("ARIMA(6,1,6)","ARIMA(5,1,5)","ARIMA(4,1,4)","ARIMA(3,1,3)",
+                "ARIMA(2,1,2)","ARIMA(1,1,1)")
+               
+AIC_colA <- c(arima(ts.robot,order = c(6,1,0))$aic,
+              arima(ts.robot,order = c(5,1,0))$aic,
+              arima(ts.robot,order = c(4,1,0))$aic,
+              arima(ts.robot,order = c(3,1,0))$aic,
+              arima(ts.robot,order = c(2,1,0))$aic,
+              arima(ts.robot,order = c(1,1,0))$aic)
+            
+AIC_colB <- c(arima(ts.robot,order = c(0,1,6))$aic,
+              arima(ts.robot,order = c(0,1,5))$aic,
+              arima(ts.robot,order = c(0,1,4))$aic,
+              arima(ts.robot,order = c(0,1,3))$aic,
+              arima(ts.robot,order = c(0,1,2))$aic,
+              arima(ts.robot,order = c(0,1,1))$aic)
+  
+AIC_colC <- c(arima(ts.robot,order = c(6,1,6))$aic,
+              arima(ts.robot,order = c(5,1,5))$aic,
+              arima(ts.robot,order = c(4,1,4))$aic,
+              arima(ts.robot,order = c(3,1,3))$aic,
+              arima(ts.robot,order = c(2,1,2))$aic,
+              arima(ts.robot,order = c(1,1,1))$aic)
+
+df_2 <- data.frame(ARIMA_colA,AIC_colA,ARIMA_colB,AIC_colB,ARIMA_colC,AIC_colC)
+df_2
+
+# comments:
+# After trying different ARIMA models (actually more than I listed above),
+# by comparing their AIC, I specify the model ARIMA(1,1,1), which has the 
+# smallest AIC.
+```
